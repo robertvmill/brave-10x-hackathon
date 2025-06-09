@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Generated files
+.next/
+out/
+
+# Prisma generated files
+src/generated/
+
+# Other generated files
+*.d.ts
+*.min.js 

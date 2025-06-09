@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pdf from 'pdf-parse';
+// import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
 
 // Resume parsing function using OpenAI
@@ -103,14 +103,15 @@ export async function POST(request: NextRequest) {
 
     // Extract text based on file type
     if (file.type === 'application/pdf') {
-      // PDF parsing using pdf-parse (open source)
-      try {
-        const data = await pdf(fileBuffer);
-        extractedText = data.text;
-      } catch (error) {
-        console.error('PDF parsing error:', error);
-        return NextResponse.json({ error: 'Failed to parse PDF' }, { status: 400 });
-      }
+      // PDF parsing temporarily disabled due to build issues
+      return NextResponse.json({ error: 'PDF parsing temporarily unavailable' }, { status: 400 });
+      // try {
+      //   const data = await pdf(fileBuffer);
+      //   extractedText = data.text;
+      // } catch (error) {
+      //   console.error('PDF parsing error:', error);
+      //   return NextResponse.json({ error: 'Failed to parse PDF' }, { status: 400 });
+      // }
     } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
                file.type === 'application/msword') {
       // Word document parsing using mammoth (open source)

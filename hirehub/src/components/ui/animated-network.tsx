@@ -267,9 +267,9 @@ const ConnectionNetwork: React.FC<ConnectionNetworkProps> = ({ className }) => {
 
       {/* Animated Beams from Recruiters to Central Hub */}
       <AnimatedBeam
-        containerRef={containerRef}
-        fromRef={recruiter1Ref}
-        toRef={centralNodeRef}
+        containerRef={containerRef as React.RefObject<HTMLElement>}
+        fromRef={recruiter1Ref as React.RefObject<HTMLElement>}
+        toRef={centralNodeRef as React.RefObject<HTMLElement>}
         curvature={-60}
         duration={4}
         delay={0}
@@ -277,9 +277,9 @@ const ConnectionNetwork: React.FC<ConnectionNetworkProps> = ({ className }) => {
         gradientStopColor="#6366f1"
       />
       <AnimatedBeam
-        containerRef={containerRef}
-        fromRef={recruiter2Ref}
-        toRef={centralNodeRef}
+        containerRef={containerRef as React.RefObject<HTMLElement>}
+        fromRef={recruiter2Ref as React.RefObject<HTMLElement>}
+        toRef={centralNodeRef as React.RefObject<HTMLElement>}
         curvature={-40}
         duration={4.5}
         delay={0.5}
@@ -289,9 +289,9 @@ const ConnectionNetwork: React.FC<ConnectionNetworkProps> = ({ className }) => {
 
       {/* Animated Beams from Central Hub to Candidates */}
       <AnimatedBeam
-        containerRef={containerRef}
-        fromRef={centralNodeRef}
-        toRef={candidate1Ref}
+        containerRef={containerRef as React.RefObject<HTMLElement>}
+        fromRef={centralNodeRef as React.RefObject<HTMLElement>}
+        toRef={candidate1Ref as React.RefObject<HTMLElement>}
         curvature={60}
         duration={3.5}
         delay={1}
@@ -300,9 +300,9 @@ const ConnectionNetwork: React.FC<ConnectionNetworkProps> = ({ className }) => {
         gradientStopColor="#10b981"
       />
       <AnimatedBeam
-        containerRef={containerRef}
-        fromRef={centralNodeRef}
-        toRef={candidate2Ref}
+        containerRef={containerRef as React.RefObject<HTMLElement>}
+        fromRef={centralNodeRef as React.RefObject<HTMLElement>}
+        toRef={candidate2Ref as React.RefObject<HTMLElement>}
         curvature={20}
         duration={4}
         delay={1.5}
@@ -311,9 +311,9 @@ const ConnectionNetwork: React.FC<ConnectionNetworkProps> = ({ className }) => {
         gradientStopColor="#10b981"
       />
       <AnimatedBeam
-        containerRef={containerRef}
-        fromRef={centralNodeRef}
-        toRef={candidate3Ref}
+        containerRef={containerRef as React.RefObject<HTMLElement>}
+        fromRef={centralNodeRef as React.RefObject<HTMLElement>}
+        toRef={candidate3Ref as React.RefObject<HTMLElement>}
         curvature={-60}
         duration={4.2}
         delay={2}

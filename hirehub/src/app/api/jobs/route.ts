@@ -71,11 +71,15 @@ export async function GET() {
     return NextResponse.json(transformedJobs)
   } catch (error) {
     console.error('Detailed error in jobs API:', error)
-    console.error('Error name:', error?.name)
-    console.error('Error message:', error?.message)
-    console.error('Error stack:', error?.stack)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorName = error instanceof Error ? error.name : 'Unknown'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
+    console.error('Error name:', errorName)
+    console.error('Error message:', errorMessage)
+    console.error('Error stack:', errorStack)
     return NextResponse.json(
-      { error: 'Failed to fetch jobs', details: error?.message },
+      { error: 'Failed to fetch jobs', details: errorMessage },
       { status: 500 }
     )
   }
