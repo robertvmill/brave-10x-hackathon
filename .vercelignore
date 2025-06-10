@@ -1,0 +1,8 @@
+# Ignore everything at root except hirehub
+/*
+!/hirehub/
+
+# But keep important root files
+!vercel.json
+!.vercelignore
+!README.md 

@@ -1,0 +1,9 @@
+{
+  "name": "brave-hackathon-workspace",
+  "private": true,
+  "workspaces": ["hirehub"],
+  "scripts": {
+    "build": "npm run build --workspace=hirehub",
+    "dev": "npm run dev --workspace=hirehub"
+  }
+} 
