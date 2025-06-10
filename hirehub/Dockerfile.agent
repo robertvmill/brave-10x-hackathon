@@ -10,14 +10,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY hirehub/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy agent code
-COPY interview-agent.py .
+COPY hirehub/interview-agent.py .
 
 # Set environment variables
 ENV PYTHONPATH=/app
