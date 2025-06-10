@@ -1,5 +1,10 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm run install",
-  "outputDirectory": "hirehub/.next"
+  "buildCommand": "cd hirehub && npm install --legacy-peer-deps && npm run build",
+  "installCommand": "cd hirehub && npm install --legacy-peer-deps",
+  "outputDirectory": "hirehub/.next",
+  "functions": {
+    "hirehub/src/app/api/**": {
+      "maxDuration": 30
+    }
+  }
 } 

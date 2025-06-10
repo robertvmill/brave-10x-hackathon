@@ -21,7 +21,7 @@ services:
       - key: LIVEKIT_API_SECRET
         fromGroup: frontend
 
-  # Python LiveKit Agent - Simplified (No Docker)
+  # Python LiveKit Agent - Fixed startup command
   - type: worker
     name: hirehub-livekit-agent
     env: python
