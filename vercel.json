@@ -1,0 +1,14 @@
+{
+  "buildCommand": "cd hirehub && npm install --legacy-peer-deps && npm run build",
+  "installCommand": "cd hirehub && npm install --legacy-peer-deps",
+  "outputDirectory": "hirehub/.next",
+  "functions": {
+    "hirehub/src/app/api/**": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "LEGACY_PEER_DEPS": "true",
+    "NPM_FLAGS": "--legacy-peer-deps"
+  }
+} 
