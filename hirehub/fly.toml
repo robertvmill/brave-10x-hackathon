@@ -1,0 +1,18 @@
+app = "hirehub-agent"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "Dockerfile.agent"
+
+[env]
+  PYTHONPATH = "/app"
+  LIVEKIT_URL = "wss://hirehub-uo31azq1.livekit.cloud"
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
+  processes = ["app"]
+
+[processes]
+  app = "python -m livekit.agents.cli interview-agent.py" 

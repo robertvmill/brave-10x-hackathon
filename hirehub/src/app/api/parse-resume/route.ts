@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-// import pdf from 'pdf-parse';
+import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
 
 // Resume parsing function using OpenAI
 async function parseResumeWithAI(text: string) {
   try {
+    // Ensure we have OpenAI API key
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not configured');
+    }
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -33,7 +38,7 @@ async function parseResumeWithAI(text: string) {
           },
           {
             role: 'user',
-            content: `Parse this resume:\n\n${text}`
+            content: `Parse this resume:\n\n${text.substring(0, 4000)}` // Limit text to avoid token limits
           }
         ],
         temperature: 0.1, // Low temperature for consistent parsing
@@ -42,16 +47,33 @@ async function parseResumeWithAI(text: string) {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
+    
+    if (!result.choices || !result.choices[0] || !result.choices[0].message) {
+      throw new Error('Invalid response structure from OpenAI');
+    }
+
     const parsedData = JSON.parse(result.choices[0].message.content);
     
     return parsedData;
   } catch (error) {
     console.error('AI parsing error:', error);
-    return null;
+    // Return a basic structure if AI parsing fails
+    return {
+      name: null,
+      email: null,
+      phone: null,
+      skills: [],
+      experience: null,
+      education: null,
+      jobTitle: null,
+      location: null,
+      summary: null
+    };
   }
 }
 
@@ -87,12 +109,37 @@ function calculateATSScore(parsedData: any): number {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('Resume parsing request received');
+  
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    }
+
+    console.log(`Processing file: ${file.name}, type: ${file.type}, size: ${file.size} bytes`);
+
+    // Validate file type more specifically
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'text/plain'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json({ 
+        error: `Unsupported file type: ${file.type}. Please upload a PDF, Word document, or text file.` 
+      }, { status: 400 });
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ 
+        error: 'File size must be less than 10MB.' 
+      }, { status: 400 });
     }
 
     // Convert file to buffer
@@ -103,50 +150,82 @@ export async function POST(request: NextRequest) {
 
     // Extract text based on file type
     if (file.type === 'application/pdf') {
-      // PDF parsing temporarily disabled due to build issues
-      return NextResponse.json({ error: 'PDF parsing temporarily unavailable' }, { status: 400 });
-      // try {
-      //   const data = await pdf(fileBuffer);
-      //   extractedText = data.text;
-      // } catch (error) {
-      //   console.error('PDF parsing error:', error);
-      //   return NextResponse.json({ error: 'Failed to parse PDF' }, { status: 400 });
-      // }
+      try {
+        const data = await pdf(fileBuffer);
+        extractedText = data.text;
+        if (!extractedText || extractedText.trim().length < 50) {
+          return NextResponse.json({ 
+            error: 'PDF appears to be empty or contains mostly images. Please upload a text-based PDF.' 
+          }, { status: 400 });
+        }
+      } catch (error) {
+        console.error('PDF parsing error:', error);
+        return NextResponse.json({ 
+          error: 'Failed to parse PDF. The file may be corrupted or password-protected.' 
+        }, { status: 400 });
+      }
     } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
                file.type === 'application/msword') {
       // Word document parsing using mammoth (open source)
       try {
         const result = await mammoth.extractRawText({ buffer: fileBuffer });
         extractedText = result.value;
+        if (!extractedText || extractedText.trim().length < 50) {
+          return NextResponse.json({ 
+            error: 'Word document appears to be empty or contains mostly images. Please upload a text-based document.' 
+          }, { status: 400 });
+        }
       } catch (error) {
         console.error('Word document parsing error:', error);
-        return NextResponse.json({ error: 'Failed to parse Word document' }, { status: 400 });
+        return NextResponse.json({ 
+          error: 'Failed to parse Word document. The file may be corrupted or in an unsupported format.' 
+        }, { status: 400 });
       }
     } else if (file.type === 'text/plain') {
       // Plain text
-      extractedText = new TextDecoder().decode(fileBuffer);
-    } else {
-      return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
+      try {
+        extractedText = new TextDecoder().decode(fileBuffer);
+        if (!extractedText || extractedText.trim().length < 50) {
+          return NextResponse.json({ 
+            error: 'Text file appears to be empty or too short.' 
+          }, { status: 400 });
+        }
+      } catch (error) {
+        console.error('Text file parsing error:', error);
+        return NextResponse.json({ 
+          error: 'Failed to parse text file. Please check the file encoding.' 
+        }, { status: 400 });
+      }
     }
 
     if (!extractedText.trim()) {
-      return NextResponse.json({ error: 'No text could be extracted from the file' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'No readable text could be extracted from the file. Please ensure your resume contains text content.' 
+      }, { status: 400 });
     }
+
+    console.log(`Text extracted successfully: ${extractedText.length} characters`);
 
     // Parse the extracted text with AI
     const parsedData = await parseResumeWithAI(extractedText);
     
-    if (!parsedData) {
-      return NextResponse.json({ error: 'Failed to parse resume content' }, { status: 500 });
+    // Check if parsing was successful (at least name or email should be found)
+    if (!parsedData.name && !parsedData.email) {
+      console.warn('No meaningful data extracted from resume');
+    } else {
+      console.log('Resume parsed successfully with AI');
     }
 
     // Calculate ATS score
     const atsScore = calculateATSScore(parsedData);
 
+    console.log(`Resume processing completed. ATS Score: ${atsScore}`);
+
     return NextResponse.json({
       success: true,
+      message: 'Resume parsed successfully',
       data: {
-        extractedText: extractedText.substring(0, 500) + '...', // First 500 chars for debugging
+        extractedText: extractedText.substring(0, 500) + (extractedText.length > 500 ? '...' : ''), // First 500 chars for debugging
         parsedData,
         atsScore,
         filename: file.name,

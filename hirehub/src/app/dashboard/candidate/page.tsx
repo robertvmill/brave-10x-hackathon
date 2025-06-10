@@ -4,11 +4,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from '@/context/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useRouter } from 'next/navigation'
+import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride'
 import {
   Avatar,
   AvatarFallback,
@@ -41,7 +41,9 @@ import {
   BarChart3, 
   Briefcase, 
   Monitor, 
-  Users
+  Users,
+  HelpCircle,
+  MapPin
 } from "lucide-react";
 
 interface JobOpportunity {
@@ -101,6 +103,45 @@ const jobOpportunities: JobOpportunity[] = [
     type: 'Part-time',
     icon: Monitor,
     selected: false
+  }
+]
+
+// Tour steps configuration
+const tourSteps: Step[] = [
+  {
+    target: '.tour-welcome',
+    content: 'Welcome to HireHub! This is your personalized dashboard where you can explore job opportunities and manage your career journey.',
+    placement: 'bottom'
+  },
+  {
+    target: '.tour-opportunities',
+    content: 'Here you\'ll find AI-powered job recommendations based on your skills, experience, and preferences. These are personalized matches just for you!',
+    placement: 'right'
+  },
+  {
+    target: '.tour-apply-button',
+    content: 'Click these "Apply" buttons to quickly apply to jobs that interest you. Your profile will be automatically shared with recruiters.',
+    placement: 'left'
+  },
+  {
+    target: '.tour-profile-completion',
+    content: 'Keep track of your profile completion here. A complete profile gets better job matches and more recruiter views!',
+    placement: 'left'
+  },
+  {
+    target: '.tour-activity',
+    content: 'Monitor your job search activity - applications sent, profile views, and saved jobs all in one place.',
+    placement: 'left'
+  },
+  {
+    target: '.tour-sidebar',
+    content: 'Use this sidebar to navigate between different sections: Explore jobs, manage your Home, update your Resume, track Interviews, and handle Payments.',
+    placement: 'right'
+  },
+  {
+    target: '.tour-explore',
+    content: 'Click "Explore" to browse all available job opportunities with advanced search and filtering options.',
+    placement: 'right'
   }
 ]
 
@@ -211,7 +252,7 @@ function CandidateSidebar() {
                     <Link
                       href="/jobs"
                       className={cn(
-                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary",
+                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary tour-explore",
                         pathname?.includes("jobs") &&
                           "bg-muted text-blue-600"
                       )}
@@ -371,8 +412,13 @@ function CandidateSidebar() {
 
 export default function CandidateDashboard() {
   const { user } = useAuth()
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [opportunities, setOpportunities] = useState(jobOpportunities)
+  
+  // Tour state
+  const [runTour, setRunTour] = useState(false)
+  const [tourStepIndex, setTourStepIndex] = useState(0)
   
   // For returning users, skip directly to the main dashboard
   // In a real app, you'd check if user has completed onboarding from their profile
@@ -386,6 +432,29 @@ export default function CandidateDashboard() {
     )
   }
 
+  const handleApplyToJob = (jobId: string) => {
+    router.push(`/apply/${jobId}`);
+  }
+
+  // Tour callback handler
+  const handleTourCallback = (data: CallBackProps) => {
+    const { status, action, index, size, type } = data
+    
+    if (status === 'finished' || status === 'skipped') {
+      setRunTour(false)
+      setTourStepIndex(0)
+    } else if (action === 'next') {
+      setTourStepIndex(index + 1)
+    } else if (action === 'prev') {
+      setTourStepIndex(index - 1)
+    }
+  }
+
+  const startTour = () => {
+    setRunTour(true)
+    setTourStepIndex(0)
+  }
+
   // For returning users, show the main dashboard directly
   if (isReturningUser) {
     // Simulate some selected opportunities for the returning user
@@ -393,25 +462,39 @@ export default function CandidateDashboard() {
     
     return (
       <div className="flex h-screen w-screen flex-row">
-        <CandidateSidebar />
+        <div className="tour-sidebar">
+          <CandidateSidebar />
+        </div>
         <main className="flex h-screen grow flex-col overflow-auto pl-[3.05rem]">
           <div className="p-6">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-foreground mb-2">
-                Welcome back, {user?.fullName || 'Candidate'}!
-              </h2>
-              <p className="text-lg text-muted-foreground">
-                Here are your AI-powered job recommendations based on your preferences.
-              </p>
+            <div className="mb-8 tour-welcome">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold text-foreground mb-2">
+                    Welcome back, {user?.fullName || 'Candidate'}!
+                  </h2>
+                  <p className="text-lg text-muted-foreground">
+                    Here are your AI-powered job recommendations based on your preferences.
+                  </p>
+                </div>
+                <Button
+                  onClick={startTour}
+                  variant="outline"
+                  className="flex items-center gap-2 hover:bg-primary/10 border-primary/20"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                  Take Tour
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-card rounded-2xl shadow-sm border border-border p-6">
+              <div className="lg:col-span-2 bg-card rounded-2xl shadow-sm border border-border p-6 tour-opportunities">
                 <h3 className="text-xl font-semibold text-foreground mb-4">
                   🎯 Recommended Opportunities
                 </h3>
                 <div className="space-y-4">
-                  {selectedOpportunities.map((opp) => {
+                  {selectedOpportunities.map((opp, index) => {
                     const IconComponent = opp.icon
                     return (
                       <div key={opp.id} className="p-4 border border-border rounded-lg hover:shadow-md transition-shadow">
@@ -432,7 +515,13 @@ export default function CandidateDashboard() {
                               {opp.type}
                             </span>
                           </div>
-                          <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                          <Button 
+                            size="sm" 
+                            className={`bg-primary hover:bg-primary/90 text-primary-foreground ${
+                              index === 0 ? 'tour-apply-button' : ''
+                            }`}
+                            onClick={() => handleApplyToJob(opp.id)}
+                          >
                             Apply
                           </Button>
                         </div>
@@ -443,7 +532,7 @@ export default function CandidateDashboard() {
               </div>
 
               <div className="space-y-6">
-                <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+                <div className="bg-card rounded-2xl shadow-sm border border-border p-6 tour-profile-completion">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Profile Completion</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
@@ -459,7 +548,7 @@ export default function CandidateDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+                <div className="bg-card rounded-2xl shadow-sm border border-border p-6 tour-activity">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Your Activity</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
@@ -498,7 +587,9 @@ export default function CandidateDashboard() {
 
   return (
     <div className="flex h-screen w-screen flex-row">
-      <CandidateSidebar />
+      <div className="tour-sidebar">
+        <CandidateSidebar />
+      </div>
       <main className="flex h-screen grow flex-col overflow-auto pl-[3.05rem]">
         <div className="min-h-screen bg-background">
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

@@ -50,7 +50,10 @@ import {
   Bookmark,
   Filter,
   ArrowUpDown,
-  Loader2
+  Loader2,
+  TrendingUp,
+  Zap,
+  Target
 } from "lucide-react";
 
 // Type definitions for job data
@@ -352,6 +355,7 @@ function JobsSidebar() {
 
 export default function JobsPage() {
   const { user } = useAuth()
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
@@ -370,10 +374,19 @@ export default function JobsPage() {
           throw new Error('Failed to fetch jobs')
         }
         const jobsData = await response.json()
-        setJobs(jobsData)
+        console.log('API Response:', jobsData) // Debug log
+        
+        // Extract jobs array from response - API returns { success: true, jobs: [...] }
+        if (jobsData.success && Array.isArray(jobsData.jobs)) {
+          setJobs(jobsData.jobs)
+        } else {
+          // Fallback if structure is different
+          setJobs(Array.isArray(jobsData) ? jobsData : [])
+        }
       } catch (err) {
         setError('Failed to load jobs. Please try again later.')
         console.error('Error fetching jobs:', err)
+        setJobs([]) // Ensure jobs is always an array
       } finally {
         setLoading(false)
       }
@@ -388,6 +401,10 @@ export default function JobsPage() {
         ? prev.filter(id => id !== jobId)
         : [...prev, jobId]
     )
+  }
+
+  const handleJobClick = (job: Job) => {
+    router.push(`/jobs/${job.id}`)
   }
 
   const formatSalary = (min: number | null, max: number | null, jobType?: string) => {
@@ -427,7 +444,7 @@ export default function JobsPage() {
       <div className="flex h-screen w-screen flex-row">
         <JobsSidebar />
         <main className="flex h-screen grow flex-col overflow-auto pl-[3.05rem]">
-          <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-background to-cyan-50 dark:from-muted dark:via-background dark:to-indigo-950 flex items-center justify-center">
+          <div className="min-h-screen bg-background flex items-center justify-center">
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
               <p className="text-muted-foreground">Loading job opportunities...</p>
@@ -443,7 +460,7 @@ export default function JobsPage() {
       <div className="flex h-screen w-screen flex-row">
         <JobsSidebar />
         <main className="flex h-screen grow flex-col overflow-auto pl-[3.05rem]">
-          <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-background to-cyan-50 dark:from-muted dark:via-background dark:to-indigo-950 flex items-center justify-center">
+          <div className="min-h-screen bg-background flex items-center justify-center">
             <div className="text-center">
               <p className="text-destructive mb-4">{error}</p>
               <Button 
@@ -463,14 +480,7 @@ export default function JobsPage() {
     <div className="flex h-screen w-screen flex-row">
       <JobsSidebar />
       <main className="flex h-screen grow flex-col overflow-auto pl-[3.05rem]">
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-background to-cyan-50 dark:from-muted dark:via-background dark:to-indigo-950 relative overflow-hidden">
-          {/* Background Geometric Elements */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-40 -right-32 w-80 h-80 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 opacity-10 blur-3xl"></div>
-            <div className="absolute top-1/2 -left-32 w-72 h-72 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-10 blur-3xl"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-gradient-to-br from-purple-400 to-pink-600 opacity-5 blur-3xl"></div>
-          </div>
-
+        <div className="min-h-screen bg-background relative overflow-hidden">
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Header */}
             <div className="mb-8">
@@ -495,46 +505,49 @@ export default function JobsPage() {
                     placeholder="Search jobs, companies, or skills..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 h-12 bg-background/70 backdrop-blur-sm border-border shadow-sm"
+                    className="pl-10 h-12 bg-muted/30 border-border shadow-sm"
                   />
                 </div>
               </div>
               
               <div className="flex gap-2">
                 <Button 
-                  variant={filterBy === 'all' ? 'default' : 'outline'}
+                  variant={filterBy === 'all' ? 'default' : 'ghost'}
                   onClick={() => setFilterBy('all')}
                   className={cn(
                     "whitespace-nowrap transition-all",
                     filterBy === 'all' 
                       ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
-                      : "border-border hover:bg-accent hover:text-accent-foreground"
+                      : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                   )}
                 >
+                  <TrendingUp className="h-4 w-4 mr-2" />
                   Trending
                 </Button>
                 <Button 
-                  variant={filterBy === 'featured' ? 'default' : 'outline'}
+                  variant={filterBy === 'featured' ? 'default' : 'ghost'}
                   onClick={() => setFilterBy('featured')}
                   className={cn(
                     "whitespace-nowrap transition-all",
                     filterBy === 'featured' 
                       ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
-                      : "border-border hover:bg-accent hover:text-accent-foreground"
+                      : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                   )}
                 >
+                  <Zap className="h-4 w-4 mr-2" />
                   Newest
                 </Button>
                 <Button 
-                  variant={filterBy === 'remote' ? 'default' : 'outline'}
+                  variant={filterBy === 'remote' ? 'default' : 'ghost'}
                   onClick={() => setFilterBy('remote')}
                   className={cn(
                     "whitespace-nowrap transition-all",
                     filterBy === 'remote' 
                       ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
-                      : "border-border hover:bg-accent hover:text-accent-foreground"
+                      : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                   )}
                 >
+                  <Target className="h-4 w-4 mr-2" />
                   Most pay
                 </Button>
                 <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white transition-all transform hover:scale-105">
@@ -544,7 +557,7 @@ export default function JobsPage() {
               </div>
             </div>
 
-            {/* Job Listings */}
+            {/* Job Listings */}image.png
             <div className="space-y-4">
               {filteredJobs.map((job, index) => (
                 <motion.div
@@ -552,7 +565,8 @@ export default function JobsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-card/70 backdrop-blur-sm rounded-lg border border-border/50 p-6 hover:shadow-lg hover:bg-card/90 transition-all cursor-pointer group"
+                  className="bg-card border border-border rounded-lg p-6 hover:shadow-lg hover:bg-card/90 transition-all cursor-pointer group"
+                  onClick={() => handleJobClick(job)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 flex-1">
@@ -628,7 +642,10 @@ export default function JobsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleSaveJob(job.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSaveJob(job.id);
+                          }}
                           className="p-2 hover:bg-accent hover:text-accent-foreground"
                         >
                           {savedJobs.includes(job.id) ? (

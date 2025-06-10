@@ -1,0 +1,42 @@
+services:
+  # Next.js Frontend (already on Vercel, this is backup)
+  - type: web
+    name: hirehub-frontend
+    env: node
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        fromGroup: frontend
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        fromGroup: frontend
+      - key: DATABASE_URL
+        fromGroup: frontend
+      - key: OPENAI_API_KEY
+        fromGroup: frontend
+      - key: LIVEKIT_API_KEY
+        fromGroup: frontend
+      - key: LIVEKIT_API_SECRET
+        fromGroup: frontend
+
+  # Python LiveKit Agent
+  - type: worker
+    name: hirehub-livekit-agent
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m livekit.agents.cli interview-agent.py
+    envVars:
+      - key: LIVEKIT_URL
+        value: wss://hirehub-uo31azq1.livekit.cloud
+      - key: LIVEKIT_API_KEY
+        fromGroup: agent
+      - key: LIVEKIT_API_SECRET
+        fromGroup: agent
+      - key: OPENAI_API_KEY
+        fromGroup: agent
+      - key: DEEPGRAM_API_KEY
+        fromGroup: agent
+      - key: CARTESIA_API_KEY
+        fromGroup: agent 

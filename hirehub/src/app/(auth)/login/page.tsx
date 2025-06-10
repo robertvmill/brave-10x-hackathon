@@ -7,12 +7,14 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { LoginFormData } from '@/types/auth'
 import { signIn, signInWithGoogle, signInWithLinkedIn } from '@/lib/auth'
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, Linkedin } from 'lucide-react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 // Zod schema for form validation
 const loginSchema = z.object({
@@ -64,23 +66,40 @@ export default function LoginPage() {
 
   const handleLinkedInLogin = async () => {
     try {
-      await signInWithLinkedIn()
-    } catch (error: any) {
+      setIsLoading(true)
+      const { error } = await createClientComponentClient().auth.signInWithOAuth({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        }
+      })
+      
+      if (error) throw error
+    } catch (error) {
       console.error('LinkedIn login error:', error)
-      setError(error.message || 'An error occurred during LinkedIn login')
+      setError(error instanceof Error ? error.message : 'LinkedIn login failed')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    // Main container with gradient background
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    // Main container with light background and geometric elements
+    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Background Geometric Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-32 w-80 h-80 rounded-full bg-muted/10 blur-3xl"></div>
+        <div className="absolute top-1/2 -left-32 w-72 h-72 rounded-full bg-muted/10 blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-muted/5 blur-3xl"></div>
+      </div>
+
+      <div className="relative max-w-md w-full space-y-8">
         {/* Header Section */}
         <div>
           {/* Back navigation link */}
           <Link
             href="/"
-            className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-8"
+            className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-8"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to HireHub
@@ -88,21 +107,21 @@ export default function LoginPage() {
           
           {/* Welcome message */}
           <div className="text-center">
-            <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+            <h2 className="mt-6 text-3xl font-bold tracking-tight text-foreground">
               Welcome back
             </h2>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+            <p className="mt-2 text-sm text-muted-foreground">
               Sign in to your HireHub account
             </p>
           </div>
         </div>
 
         {/* Login Form Container */}
-        <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg px-8 py-8">
+        <div className="bg-card/70 backdrop-blur-sm rounded-lg border border-border/50 p-8 shadow-lg">
           {/* Error message display */}
           {error && (
-            <div className="mb-4 p-4 rounded-md bg-red-50 border border-red-200">
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="mb-4 p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+              <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
           
@@ -118,10 +137,10 @@ export default function LoginPage() {
                   autoComplete="email"
                   placeholder="Enter your email"
                   {...register('email')}
-                  className={errors.email ? 'border-red-300 focus:ring-red-500' : ''}
+                  className={errors.email ? 'border-destructive focus:ring-destructive' : ''}
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                  <p className="mt-1 text-sm text-destructive">{errors.email.message}</p>
                 )}
               </div>
             </div>
@@ -136,7 +155,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   placeholder="Enter your password"
                   {...register('password')}
-                  className={errors.password ? 'border-red-300 focus:ring-red-500 pr-10' : 'pr-10'}
+                  className={errors.password ? 'border-destructive focus:ring-destructive pr-10' : 'pr-10'}
                 />
                 <button
                   type="button"
@@ -144,13 +163,13 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                 </button>
                 {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                  <p className="mt-1 text-sm text-destructive">{errors.password.message}</p>
                 )}
               </div>
             </div>
@@ -160,7 +179,7 @@ export default function LoginPage() {
               <div className="text-sm">
                 <Link
                   href="/forgot-password"
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
+                  className="font-medium text-primary hover:text-primary/80"
                 >
                   Forgot your password?
                 </Link>
@@ -171,7 +190,7 @@ export default function LoginPage() {
             <div>
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 disabled={isLoading}
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
@@ -184,10 +203,10 @@ export default function LoginPage() {
             {/* Divider with text */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Or continue with</span>
+                <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
               </div>
             </div>
 
@@ -222,27 +241,39 @@ export default function LoginPage() {
               </Button>
 
               {/* LinkedIn login button */}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleLinkedInLogin}
-                disabled={isLoading}
-              >
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                </svg>
-                LinkedIn
-              </Button>
+              <div className="space-y-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleLinkedInLogin}
+                  disabled={isLoading}
+                >
+                  <Linkedin className="h-4 w-4 mr-2 text-blue-600" />
+                  Continue with LinkedIn
+                </Button>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with email
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Sign up link section */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-300">
+            <p className="text-sm text-muted-foreground">
               Don&apos;t have an account?{' '}
               <Link
                 href="/register"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
+                className="font-medium text-primary hover:text-primary/80"
               >
                 Sign up for free
               </Link>

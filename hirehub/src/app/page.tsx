@@ -74,19 +74,6 @@ export default function Home() {
                   Find experts →
                 </Link>
               </div>
-
-              {/* Trust Indicators */}
-              <div className="mt-8">
-                <p className="text-sm font-semibold leading-6 text-gray-400 dark:text-gray-500 mb-6">
-                  5000+ opportunities recently, as seen on...
-                </p>
-                <div className="flex items-center justify-center gap-8 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500">
-                  <div className="text-2xl font-bold text-gray-400">TechCrunch</div>
-                  <div className="text-2xl font-bold text-gray-400">Forbes</div>
-                  <div className="text-2xl font-bold text-gray-400">WSJ</div>
-                  <div className="text-2xl font-bold text-gray-400">Bloomberg</div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

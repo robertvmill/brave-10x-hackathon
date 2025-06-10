@@ -231,13 +231,14 @@ const ConnectionNetwork: React.FC<ConnectionNetworkProps> = ({ className }) => {
       )}
       ref={containerRef}
     >
+      {/* Horizontally mirrored layout: left/right positions swapped */}
       <div className="flex size-full max-h-[280px] max-w-md flex-col items-stretch justify-between gap-8">
-        {/* Top Row - Recruiters */}
+        {/* Top Row - Recruiters (horizontally mirrored) */}
         <div className="flex flex-row items-center justify-between">
-          <Node ref={recruiter1Ref} className="bg-blue-50 text-blue-600 shadow-blue-200">
+          <Node ref={recruiter2Ref} className="bg-orange-50 text-orange-600 shadow-orange-200">
             <Briefcase size={20} />
           </Node>
-          <Node ref={recruiter2Ref} className="bg-orange-50 text-orange-600 shadow-orange-200">
+          <Node ref={recruiter1Ref} className="bg-blue-50 text-blue-600 shadow-blue-200">
             <Briefcase size={20} />
           </Node>
         </div>
@@ -251,47 +252,47 @@ const ConnectionNetwork: React.FC<ConnectionNetworkProps> = ({ className }) => {
           </Node>
         </div>
 
-        {/* Bottom Row - Candidates */}
+        {/* Bottom Row - Candidates (horizontally mirrored) */}
         <div className="flex flex-row items-center justify-between">
-          <Node ref={candidate1Ref} className="bg-emerald-50 text-emerald-600 shadow-emerald-200">
+          <Node ref={candidate3Ref} className="bg-emerald-50 text-emerald-600 shadow-emerald-200">
             <User size={20} />
           </Node>
           <Node ref={candidate2Ref} className="bg-emerald-50 text-emerald-600 shadow-emerald-200">
             <User size={20} />
           </Node>
-          <Node ref={candidate3Ref} className="bg-emerald-50 text-emerald-600 shadow-emerald-200">
+          <Node ref={candidate1Ref} className="bg-emerald-50 text-emerald-600 shadow-emerald-200">
             <User size={20} />
           </Node>
         </div>
       </div>
 
-      {/* Animated Beams from Recruiters to Central Hub */}
-      <AnimatedBeam
-        containerRef={containerRef as React.RefObject<HTMLElement>}
-        fromRef={recruiter1Ref as React.RefObject<HTMLElement>}
-        toRef={centralNodeRef as React.RefObject<HTMLElement>}
-        curvature={-60}
-        duration={4}
-        delay={0}
-        gradientStartColor="#3b82f6"
-        gradientStopColor="#6366f1"
-      />
+      {/* Animated Beams from Recruiters to Central Hub (adjusted for mirrored positions) */}
       <AnimatedBeam
         containerRef={containerRef as React.RefObject<HTMLElement>}
         fromRef={recruiter2Ref as React.RefObject<HTMLElement>}
         toRef={centralNodeRef as React.RefObject<HTMLElement>}
-        curvature={-40}
-        duration={4.5}
-        delay={0.5}
+        curvature={-60}
+        duration={4}
+        delay={0}
         gradientStartColor="#f97316"
         gradientStopColor="#8b5cf6"
       />
+      <AnimatedBeam
+        containerRef={containerRef as React.RefObject<HTMLElement>}
+        fromRef={recruiter1Ref as React.RefObject<HTMLElement>}
+        toRef={centralNodeRef as React.RefObject<HTMLElement>}
+        curvature={-40}
+        duration={4.5}
+        delay={0.5}
+        gradientStartColor="#3b82f6"
+        gradientStopColor="#6366f1"
+      />
 
-      {/* Animated Beams from Central Hub to Candidates */}
+      {/* Animated Beams from Central Hub to Candidates (adjusted for mirrored positions) */}
       <AnimatedBeam
         containerRef={containerRef as React.RefObject<HTMLElement>}
         fromRef={centralNodeRef as React.RefObject<HTMLElement>}
-        toRef={candidate1Ref as React.RefObject<HTMLElement>}
+        toRef={candidate3Ref as React.RefObject<HTMLElement>}
         curvature={60}
         duration={3.5}
         delay={1}
@@ -313,7 +314,7 @@ const ConnectionNetwork: React.FC<ConnectionNetworkProps> = ({ className }) => {
       <AnimatedBeam
         containerRef={containerRef as React.RefObject<HTMLElement>}
         fromRef={centralNodeRef as React.RefObject<HTMLElement>}
-        toRef={candidate3Ref as React.RefObject<HTMLElement>}
+        toRef={candidate1Ref as React.RefObject<HTMLElement>}
         curvature={-60}
         duration={4.2}
         delay={2}

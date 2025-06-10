@@ -1,0 +1,13 @@
+{
+  "env": {
+    "LEGACY_PEER_DEPS": "true",
+    "NPM_FLAGS": "--legacy-peer-deps"
+  },
+  "buildCommand": "npm install --legacy-peer-deps && npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
+  "functions": {
+    "src/app/api/**": {
+      "maxDuration": 30
+    }
+  }
+} 

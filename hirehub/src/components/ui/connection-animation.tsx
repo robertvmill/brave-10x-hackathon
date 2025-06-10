@@ -349,48 +349,49 @@ const CandidateIcon = () => (
 );
 
 const ConnectionDemo = () => {
+  // Horizontally mirrored node positions (x coordinates inverted: x -> 1-x)
   const nodes: ConnectionNode[] = [
     {
       id: "recruiter1",
       label: "Recruiter 1",
       type: "recruiter",
-      position: { x: 0.15, y: 0.3 },
+      position: { x: 0.85, y: 0.3 }, // mirrored from 0.15
     },
     {
       id: "recruiter2",
       label: "Recruiter 2",
       type: "recruiter",
-      position: { x: 0.85, y: 0.25 },
+      position: { x: 0.15, y: 0.25 }, // mirrored from 0.85
     },
     {
       id: "recruiter3",
       label: "Recruiter 3",
       type: "recruiter",
-      position: { x: 0.75, y: 0.6 },
+      position: { x: 0.25, y: 0.6 }, // mirrored from 0.75
     },
     {
       id: "candidate1",
       label: "Candidate 1",
       type: "candidate",
-      position: { x: 0.3, y: 0.75 },
+      position: { x: 0.7, y: 0.75 }, // mirrored from 0.3
     },
     {
       id: "candidate2",
       label: "Candidate 2",
       type: "candidate",
-      position: { x: 0.5, y: 0.8 },
+      position: { x: 0.5, y: 0.8 }, // stays center
     },
     {
       id: "candidate3",
       label: "Candidate 3",
       type: "candidate",
-      position: { x: 0.7, y: 0.75 },
+      position: { x: 0.3, y: 0.75 }, // mirrored from 0.7
     },
     {
       id: "candidate4",
       label: "Candidate 4",
       type: "candidate",
-      position: { x: 0.2, y: 0.5 },
+      position: { x: 0.8, y: 0.5 }, // mirrored from 0.2
     },
   ];
 

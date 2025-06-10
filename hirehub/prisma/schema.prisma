@@ -4,6 +4,8 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// ===== CONFIGURATION =====
+
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -14,150 +16,169 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums
+// ===== ENUMS =====
+// These enums define the fixed sets of values for various categorical fields
+
 enum UserType {
-  candidate
-  recruiter
+  candidate  // Job seekers
+  recruiter  // Company representatives posting jobs
 }
 
 enum JobType {
-  Full_time @map("Full-time")
-  Part_time @map("Part-time")
-  Contractor
-  Freelance
-  Internship
+  Full_time @map("Full-time")    // Standard full-time position
+  Part_time @map("Part-time")    // Part-time position
+  Contractor                     // Contract-based work
+  Freelance                      // Freelance/project-based work
+  Internship                     // Temporary training position
 }
 
 enum ExperienceLevel {
-  Entry
-  Mid
-  Senior
-  Executive
+  Entry      // 0-2 years experience
+  Mid        // 2-5 years experience
+  Senior     // 5-10 years experience
+  Executive  // 10+ years experience
 }
 
 enum ApplicationStatus {
-  draft
-  submitted
-  viewed
-  shortlisted
-  interview
-  rejected
-  hired
+  draft       // Application started but not submitted
+  resume_uploaded // Resume has been uploaded
+  interview_scheduled // Interview is scheduled
+  interview_completed // Interview has been completed
+  submitted   // Initial application submitted
+  viewed      // Reviewed by recruiter
+  shortlisted // Selected for further consideration
+  interview   // In interview process
+  rejected    // Not selected
+  hired       // Successful hire
+}
+
+enum InterviewStatus {
+  scheduled   // Interview is scheduled
+  in_progress // Interview is currently happening
+  completed   // Interview finished successfully
+  failed      // Interview had technical issues
+  no_show     // Candidate didn't show up
 }
 
 enum IndustryType {
-  Technology
-  Healthcare
-  Finance
-  Consulting
-  Startup
-  Education
-  Government
-  Non_profit @map("Non-profit")
-  Other
+  Technology   // Tech companies
+  Healthcare   // Medical and health services
+  Finance      // Financial services
+  Consulting   // Business consulting
+  Startup      // Early stage companies
+  Education    // Educational institutions
+  Government   // Public sector
+  Non_profit @map("Non-profit")  // Non-profit organizations
+  Other        // Miscellaneous industries
 }
 
-// Companies
+// ===== MODELS =====
+
+// Companies - Organizations that post jobs and employ users
 model Company {
   id          String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name        String      @db.VarChar(255)
-  description String?
+  description String?     // Company overview/about
   website     String?     @db.VarChar(255)
   logoUrl     String?     @map("logo_url") @db.VarChar(255)
   industry    IndustryType?
-  sizeRange   String?     @map("size_range") @db.VarChar(50)
+  sizeRange   String?     @map("size_range") @db.VarChar(50)  // e.g. "1-10", "11-50", "51-200"
   location    String?     @db.VarChar(255)
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
 
-  // Relations
+  // Relations - Company has many employees and job postings
   employees     UserProfile[]
   jobOpportunities JobOpportunity[]
 
   @@map("companies")
 }
 
-// User profiles (extends Supabase auth.users)
+// User profiles - Extended user information beyond auth data
 model UserProfile {
-  id                String          @id @db.Uuid
+  id                String          @id @db.Uuid  // Maps to Supabase auth.users.id
   fullName          String?         @map("full_name") @db.VarChar(255)
   userType          UserType        @map("user_type")
   companyId         String?         @map("company_id") @db.Uuid
-  title             String?         @db.VarChar(255)
+  title             String?         @db.VarChar(255)  // Job title/role
   phoneNumber       String?         @map("phone_number") @db.VarChar(20)
-  bio               String?
+  bio               String?         // Professional summary
   location          String?         @db.VarChar(255)
   linkedinUrl       String?         @map("linkedin_url") @db.VarChar(255)
   githubUrl         String?         @map("github_url") @db.VarChar(255)
   portfolioUrl      String?         @map("portfolio_url") @db.VarChar(255)
   resumeUrl         String?         @map("resume_url") @db.VarChar(255)
-  skills            String[]
+  skills            String[]        // Array of skill names
   experienceLevel   ExperienceLevel? @map("experience_level")
   yearsExperience   Int?            @map("years_experience")
-  salaryMin         Int?            @map("salary_min")
-  salaryMax         Int?            @map("salary_max")
+  salaryMin         Int?            @map("salary_min")  // Minimum desired salary
+  salaryMax         Int?            @map("salary_max")  // Maximum desired salary
   remotePreference  Boolean         @default(false) @map("remote_preference")
   profileCompleted  Boolean         @default(false) @map("profile_completed")
-  profileStrength   Int             @default(0) @map("profile_strength")
+  profileStrength   Int             @default(0) @map("profile_strength")  // 0-100 score
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt         DateTime        @updatedAt @map("updated_at")
 
-  // Relations
+  // Relations - User can be associated with various activities
   company                Company?             @relation(fields: [companyId], references: [id])
-  jobOpportunities       JobOpportunity[]     @relation("RecruiterJobs")
-  candidateApplications  Application[]        @relation("CandidateApplications")
-  recruiterApplications  Application[]        @relation("RecruiterApplications")
-  jobPreferences         UserJobPreference[]
-  savedJobs              SavedJob[]
-  profileViews           ProfileView[]        @relation("ViewedProfile")
-  viewedProfiles         ProfileView[]        @relation("Viewer")
-  onboardingProgress     OnboardingProgress?
+  jobOpportunities       JobOpportunity[]     @relation("RecruiterJobs")  // Jobs posted by recruiter
+  candidateApplications  Application[]        @relation("CandidateApplications")  // Applications submitted
+  recruiterApplications  Application[]        @relation("RecruiterApplications")  // Applications received
+  jobPreferences         UserJobPreference[]  // Job matching preferences
+  savedJobs              SavedJob[]           // Bookmarked jobs
+  profileViews           ProfileView[]        @relation("ViewedProfile")  // Times profile was viewed
+  viewedProfiles         ProfileView[]        @relation("Viewer")         // Profiles viewed by user
+  onboardingProgress     OnboardingProgress?  // Onboarding status
+  interviews             Interview[]          @relation("CandidateInterviews") // Interviews taken
+  jobRecommendations     JobRecommendation[]  @relation("CandidateRecommendations") // AI job recommendations
 
   @@map("user_profiles")
 }
 
-// Job opportunities
+// Job opportunities - Job postings created by recruiters
 model JobOpportunity {
   id               String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   title            String          @db.VarChar(255)
   companyId        String          @map("company_id") @db.Uuid
   recruiterId      String          @map("recruiter_id") @db.Uuid
-  description      String?
-  requirements     String?
+  description      String?         // Detailed job description
+  requirements     String?         // Job requirements/qualifications
   jobType          JobType         @map("job_type")
   experienceLevel  ExperienceLevel? @map("experience_level")
-  salaryMin        Int?            @map("salary_min")
-  salaryMax        Int?            @map("salary_max")
+  salaryMin        Int?            @map("salary_min")  // Minimum salary offered
+  salaryMax        Int?            @map("salary_max")  // Maximum salary offered
   location         String?         @db.VarChar(255)
   remoteAllowed    Boolean         @default(false) @map("remote_allowed")
-  skillsRequired   String[]        @map("skills_required")
-  skillsPreferred  String[]        @map("skills_preferred")
+  skillsRequired   String[]        @map("skills_required")   // Must-have skills
+  skillsPreferred  String[]        @map("skills_preferred") // Nice-to-have skills
   isActive         Boolean         @default(true) @map("is_active")
-  featured         Boolean         @default(false)
-  externalId       String?         @map("external_id") @db.VarChar(255)
+  featured         Boolean         @default(false)  // Premium/highlighted posting
+  externalId       String?         @map("external_id") @db.VarChar(255)  // ID from external job board
   createdAt        DateTime        @default(now()) @map("created_at")
   updatedAt        DateTime        @updatedAt @map("updated_at")
 
-  // Relations
+  // Relations - Job connects company, recruiter, and candidates
   company         Company             @relation(fields: [companyId], references: [id])
   recruiter       UserProfile         @relation("RecruiterJobs", fields: [recruiterId], references: [id])
-  applications    Application[]
-  userPreferences UserJobPreference[]
-  savedBy         SavedJob[]
+  applications    Application[]       // Applications received
+  userPreferences UserJobPreference[] // Matching preferences
+  savedBy         SavedJob[]          // Users who saved this job
+  interviews      Interview[]         // Interviews for this job
+  recommendations JobRecommendation[] // AI recommendations for this job
 
   @@map("job_opportunities")
 }
 
-// User job preferences (for candidates)
+// User job preferences - Matching criteria for job recommendations
 model UserJobPreference {
   id                 String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   userId             String         @map("user_id") @db.Uuid
   opportunityId      String         @map("opportunity_id") @db.Uuid
   isInterested       Boolean        @default(true) @map("is_interested")
-  preferenceStrength Int            @default(1) @map("preference_strength")
+  preferenceStrength Int            @default(1) @map("preference_strength")  // 1-5 matching score
   createdAt          DateTime       @default(now()) @map("created_at")
 
-  // Relations
+  // Relations - Links user preferences to specific jobs
   user        UserProfile    @relation(fields: [userId], references: [id], onDelete: Cascade)
   opportunity JobOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
 
@@ -165,36 +186,38 @@ model UserJobPreference {
   @@map("user_job_preferences")
 }
 
-// Applications
+// Applications - Job applications submitted by candidates
 model Application {
   id            String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   candidateId   String            @map("candidate_id") @db.Uuid
   opportunityId String            @map("opportunity_id") @db.Uuid
   recruiterId   String            @map("recruiter_id") @db.Uuid
-  status        ApplicationStatus @default(submitted)
+  status        ApplicationStatus @default(draft)
   coverLetter   String?           @map("cover_letter")
   resumeUrl     String?           @map("resume_url") @db.VarChar(255)
+  resumeData    Json?             @map("resume_data") // Parsed resume data
   appliedAt     DateTime          @default(now()) @map("applied_at")
   updatedAt     DateTime          @updatedAt @map("updated_at")
-  notes         String?
+  notes         String?           // Internal recruiter notes
 
-  // Relations
+  // Relations - Connects candidate, job, and recruiter
   candidate   UserProfile    @relation("CandidateApplications", fields: [candidateId], references: [id])
   opportunity JobOpportunity @relation(fields: [opportunityId], references: [id])
   recruiter   UserProfile    @relation("RecruiterApplications", fields: [recruiterId], references: [id])
+  interviews  Interview[]    // Associated interviews
 
   @@unique([candidateId, opportunityId])
   @@map("applications")
 }
 
-// Saved jobs (bookmarks)
+// Saved jobs - Bookmarked jobs for later viewing
 model SavedJob {
   id            String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   userId        String         @map("user_id") @db.Uuid
   opportunityId String         @map("opportunity_id") @db.Uuid
   createdAt     DateTime       @default(now()) @map("created_at")
 
-  // Relations
+  // Relations - Links user to saved job
   user        UserProfile    @relation(fields: [userId], references: [id], onDelete: Cascade)
   opportunity JobOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
 
@@ -202,45 +225,109 @@ model SavedJob {
   @@map("saved_jobs")
 }
 
-// Profile views (for analytics)
+// Profile views - Analytics tracking for profile visibility
 model ProfileView {
   id                String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   viewedProfileId   String      @map("viewed_profile_id") @db.Uuid
-  viewerId          String?     @map("viewer_id") @db.Uuid
+  viewerId          String?     @map("viewer_id") @db.Uuid  // Nullable for anonymous views
   viewedAt          DateTime    @default(now()) @map("viewed_at")
-  source            String?     @db.VarChar(50)
+  source            String?     @db.VarChar(50)  // Traffic source
 
-  // Relations
+  // Relations - Tracks who viewed whom
   viewedProfile UserProfile @relation("ViewedProfile", fields: [viewedProfileId], references: [id])
   viewer        UserProfile? @relation("Viewer", fields: [viewerId], references: [id])
 
   @@map("profile_views")
 }
 
-// Skills master table
+// Skills - Master list of available skills
 model Skill {
   id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name      String   @unique @db.VarChar(100)
-  category  String?  @db.VarChar(50)
+  category  String?  @db.VarChar(50)  // Skill category/type
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("skills")
 }
 
-// Onboarding progress tracking
+// Onboarding progress - Tracks user onboarding completion
 model OnboardingProgress {
   id               String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   userId           String    @unique @map("user_id") @db.Uuid
-  step1Completed   Boolean   @default(false) @map("step_1_completed")
-  step2Completed   Boolean   @default(false) @map("step_2_completed")
-  step3Completed   Boolean   @default(false) @map("step_3_completed")
-  step4Completed   Boolean   @default(false) @map("step_4_completed")
+  step1Completed   Boolean   @default(false) @map("step_1_completed")  // Basic info
+  step2Completed   Boolean   @default(false) @map("step_2_completed")  // Profile details
+  step3Completed   Boolean   @default(false) @map("step_3_completed")  // Skills/experience
+  step4Completed   Boolean   @default(false) @map("step_4_completed")  // Preferences
   completedAt      DateTime? @map("completed_at")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  // Relations
+  // Relations - One-to-one with user profile
   user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("onboarding_progress")
+}
+
+// Interviews - AI-powered interviews for job applications
+model Interview {
+  id                String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  applicationId     String          @map("application_id") @db.Uuid
+  candidateId       String          @map("candidate_id") @db.Uuid
+  opportunityId     String          @map("opportunity_id") @db.Uuid
+  status            InterviewStatus @default(scheduled)
+  roomName          String?         @map("room_name") @db.VarChar(255) // LiveKit room name
+  startedAt         DateTime?       @map("started_at")
+  completedAt       DateTime?       @map("completed_at")
+  duration          Int?            // Duration in minutes
+  questions         Json?           // AI-generated questions for the role
+  aiAnalysis        Json?           @map("ai_analysis") // AI analysis of responses
+  overallScore      Int?            @map("overall_score") // 0-100 interview score
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  application   Application           @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  candidate     UserProfile          @relation("CandidateInterviews", fields: [candidateId], references: [id])
+  opportunity   JobOpportunity       @relation(fields: [opportunityId], references: [id])
+  transcripts   InterviewTranscript[]
+  recommendations JobRecommendation[]
+
+  @@map("interviews")
+}
+
+// Interview transcripts - Real-time transcription data
+model InterviewTranscript {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  interviewId  String    @map("interview_id") @db.Uuid
+  speaker      String    @db.VarChar(20) // "ai" or "candidate"
+  content      String    // Transcribed text
+  timestamp    DateTime  @default(now())
+  confidence   Float?    // Transcription confidence score
+  questionId   String?   @map("question_id") @db.VarChar(50) // Which question this relates to
+
+  // Relations
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@map("interview_transcripts")
+}
+
+// Job recommendations - AI-generated job matches based on interview
+model JobRecommendation {
+  id               String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  interviewId      String         @map("interview_id") @db.Uuid
+  candidateId      String         @map("candidate_id") @db.Uuid
+  opportunityId    String         @map("opportunity_id") @db.Uuid
+  matchScore       Float          @map("match_score") // 0-1 match confidence
+  reasoning        String?        // AI explanation for recommendation
+  skillsMatch      Json?          @map("skills_match") // Matched skills analysis
+  experienceMatch  Json?          @map("experience_match") // Experience level match
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  // Relations
+  interview   Interview      @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  candidate   UserProfile    @relation("CandidateRecommendations", fields: [candidateId], references: [id])
+  opportunity JobOpportunity @relation(fields: [opportunityId], references: [id])
+
+  @@unique([interviewId, opportunityId])
+  @@map("job_recommendations")
 }
